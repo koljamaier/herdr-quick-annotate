@@ -4,6 +4,8 @@ Mark passages of agent output in [Herdr](https://github.com/herdrdev/herdr)'s co
 losing your place, then paste all of them into the agent's prompt as labeled quotes and comment on
 them there.
 
+![Demo: two passages of a Claude Code reply are marked in copy mode, then pasted into its prompt and commented on](assets/demo.gif)
+
 ## Why
 
 Shoutout to [plannotator/herdr-annotate](https://github.com/plannotator/herdr-annotate), which
