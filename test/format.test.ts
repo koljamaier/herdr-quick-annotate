@@ -25,7 +25,7 @@ test("formatSnippets labels and quotes each snippet and ends with a blank line",
   assert.equal(
     text,
     [
-      "Anmerkungen zu folgenden Stellen:",
+      "Comments on the following passages:",
       "",
       "[A1]",
       "> first line",

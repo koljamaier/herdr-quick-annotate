@@ -22,7 +22,7 @@ export function preview(text: string, maxLength = 60): string {
 
 /**
  * The text pasted into the agent prompt. Each snippet gets a short label (A1, A2, ...) so the
- * comments can be dictated afterwards ("Zu A1: ..."). Ends with a blank line for that dictation.
+ * comments can be dictated afterwards ("A1: ..."). Ends with a blank line for that dictation.
  */
 export function formatSnippets(snippets: Snippet[]): string {
   const blocks = snippets.map((snippet, index) => {
@@ -32,5 +32,5 @@ export function formatSnippets(snippets: Snippet[]): string {
       .join("\n");
     return `[A${index + 1}]\n${quoted}`;
   });
-  return `Anmerkungen zu folgenden Stellen:\n\n${blocks.join("\n\n")}\n\n`;
+  return `Comments on the following passages:\n\n${blocks.join("\n\n")}\n\n`;
 }

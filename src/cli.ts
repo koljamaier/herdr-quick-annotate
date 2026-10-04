@@ -29,13 +29,13 @@ function required(value: string | null | undefined, name: string): string {
 }
 
 function annotations(count: number): string {
-  return count === 1 ? "1 Annotation" : `${count} Annotationen`;
+  return count === 1 ? "1 annotation" : `${count} annotations`;
 }
 
 async function mark(context: InvocationContext, stateDir: string, tabId: string): Promise<void> {
   const text = sanitize(context.selected_text ?? "");
   if (text === "") {
-    await notify("Nichts markiert", "Im Copy-Mode Text auswählen, dann prefix+a");
+    await notify("Nothing selected", "Select text in copy mode, then press prefix+a");
     return;
   }
   const { added, count } = addSnippet(stateDir, tabId, {
@@ -48,39 +48,39 @@ async function mark(context: InvocationContext, stateDir: string, tabId: string)
     tabLabel: context.tab_label ?? undefined,
   });
   if (added) {
-    await notify(`Annotation #${count} vorgemerkt`, preview(text));
+    await notify(`Annotation #${count} queued`, preview(text));
   } else {
-    await notify("Schon vorgemerkt", `#${count}: ${preview(text)}`);
+    await notify("Already queued", `#${count}: ${preview(text)}`);
   }
 }
 
 async function insert(context: InvocationContext, stateDir: string, tabId: string): Promise<void> {
   const snippets = readQueue(stateDir, tabId);
   if (snippets.length === 0) {
-    await notify("Keine Annotationen vorgemerkt", "Im Copy-Mode markieren, dann prefix+a");
+    await notify("No annotations queued", "Select text in copy mode, then press prefix+a");
     return;
   }
   const paneId = required(context.focused_pane_id ?? process.env.HERDR_PANE_ID, "focused pane");
   if ((await deliver(paneId, formatSnippets(snippets))) === "agent-blocked") {
-    await notify("Nicht eingefügt", "Der Agent wartet auf eine Bestätigung");
+    await notify("Not inserted", "The agent is waiting for an approval or answer");
     return;
   }
   archiveSnippets(stateDir, tabId, snippets, paneId);
-  await notify(`${annotations(snippets.length)} eingefügt`);
+  await notify(`${annotations(snippets.length)} inserted`);
 }
 
 async function undo(stateDir: string, tabId: string): Promise<void> {
   const { removed, count } = removeLastSnippet(stateDir, tabId);
   if (!removed) {
-    await notify("Keine Annotationen vorgemerkt");
+    await notify("No annotations queued");
     return;
   }
-  await notify(`#${count + 1} entfernt (noch ${count})`, preview(removed.text));
+  await notify(`Removed #${count + 1} (${count} left)`, preview(removed.text));
 }
 
 async function clear(stateDir: string, tabId: string): Promise<void> {
   const count = clearQueue(stateDir, tabId);
-  await notify(count === 0 ? "Keine Annotationen vorgemerkt" : `${annotations(count)} verworfen`);
+  await notify(count === 0 ? "No annotations queued" : `${annotations(count)} discarded`);
 }
 
 async function main(command: string | undefined): Promise<void> {
@@ -104,6 +104,6 @@ async function main(command: string | undefined): Promise<void> {
 
 main(process.argv[2]).catch(async (error: Error) => {
   console.error(error.stack ?? error.message);
-  await notify("Quick Annotate: Fehler", error.message);
+  await notify("Quick Annotate failed", error.message);
   process.exitCode = 1;
 });

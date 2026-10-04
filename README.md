@@ -4,39 +4,19 @@ Review agent output by voice inside [Herdr](https://github.com/herdrdev/herdr). 
 one passage after another without losing your place. Then paste all of them into the agent's
 prompt as labeled quotes and speak your comments.
 
-## Why this plugin exists
+## Why
 
-First, a shoutout to [plannotator/herdr-annotate](https://github.com/plannotator/herdr-annotate)
-by the [Plannotator](https://github.com/backnotprop/plannotator) folks. It is the plugin that
-brought annotations to Herdr, and it does a lot more than this one: comments in an editor, an
-annotation manager and archive, review of whole Markdown documents and agent replies, Neovim
-integration and remote sessions. If you type your comments, use it. This plugin borrows its key
-layout and several of its ideas, for example storing context with every snippet, locking the store,
-and delivering text via bracketed paste.
+Shoutout to [plannotator/herdr-annotate](https://github.com/plannotator/herdr-annotate), which
+inspired this plugin. I needed a variant for reviewing by voice. There, every annotation opens an
+editor popup. That ends Herdr's copy mode, so you lose your place, and the comment goes into the
+popup instead of the agent's prompt, where my dictation works.
 
-My workflow is different. I review long agent replies by voice: read, point at a few passages, and
-say what I think about each of them. herdr-annotate got in the way of that in two places:
+Here, nothing opens:
 
-1. **Every annotation opens a popup editor.** Herdr leaves copy mode whenever a popup opens or
-   closes. So after each annotation, the copy-mode cursor, scroll position and selection are gone.
-   I was back at the bottom of the pane and had to scroll up again to find the next passage.
-2. **Comments go into that popup.** I want to dictate my comments into the agent's prompt, where
-   my voice input already works, not type them into a separate window one by one.
-
-So this plugin splits the job differently:
-
-- **Marking is silent.** `prefix+a` adds the selection to a queue and shows a short toast, like
-  "Copied to clipboard". It opens no popup and doesn't move focus, so copy mode stays exactly where
-  it was and you can select the next passage right away.
-- **Inserting puts everything into the prompt.** `prefix+m` pastes all queued passages into the
-  focused pane as labeled quotes, without pressing Enter. You then say "A1: … A2: …" and send.
-
-|  | herdr-annotate | herdr-quick-annotate |
-|---|---|---|
-| Mark a passage | popup editor per annotation | toast; copy mode stays put |
-| Where comments go | the popup, one per annotation | the agent's prompt, after inserting |
-| Output | Markdown on the clipboard | pasted into the prompt, not submitted |
-| Scope | terminal text, documents, agent replies | terminal text, one queue per Herdr tab |
+- `prefix+a` queues the selection and shows a short toast. Copy mode stays exactly where it was, so
+  you can select the next passage right away.
+- `prefix+m` pastes all queued passages into the agent's prompt as labeled quotes, without pressing
+  Enter. Then you say "A1: … A2: …" and send.
 
 ## Requirements
 
@@ -132,7 +112,7 @@ A review round:
 ### What gets pasted
 
 ```
-Anmerkungen zu folgenden Stellen:
+Comments on the following passages:
 
 [A1]
 > first marked passage
@@ -144,8 +124,7 @@ Anmerkungen zu folgenden Stellen:
 ```
 
 The paste ends with an empty line, so you can start talking right away. Control characters are
-stripped, and trailing whitespace is trimmed. The format lives in `src/format.ts`. The header and
-the toasts are currently in German.
+stripped, and trailing whitespace is trimmed. The format lives in `src/format.ts`.
 
 ### Claude Code
 
@@ -191,3 +170,7 @@ herdr plugin link "$PWD"
 `herdr plugin install` refuses to overwrite a linked plugin. Run `herdr plugin unlink quick-annotate`
 before switching to the GitHub install. Action runs, including stderr, show up in
 `herdr plugin log list`.
+
+## License
+
+MIT
