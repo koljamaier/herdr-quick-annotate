@@ -11,6 +11,10 @@ inspired this plugin. I needed a variant for reviewing by voice. There, every an
 editor popup. That ends Herdr's copy mode, so you lose your place, and the comment goes into the
 popup instead of the agent's prompt, where my dictation works.
 
+A system-wide dictation tool (Whisper-based or similar) would type into the popup as well. If
+that's part of your setup, the original dialog may suit you fine. It isn't part of mine, so I
+wanted the comments in the prompt.
+
 Here, nothing opens:
 
 - `prefix+a` queues the selection and shows a short toast. Copy mode stays exactly where it was, so
