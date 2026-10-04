@@ -1,0 +1,38 @@
+id = "quick-annotate"
+name = "Quick Annotate"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Mark terminal selections per tab without leaving copy mode, then paste them into the agent prompt."
+platforms = ["macos", "linux"]
+
+# Every action is a short-lived Node process (Node >= 24 runs the TypeScript sources directly).
+# Herdr resolves the relative program against $HERDR_PLUGIN_ROOT; the shebang picks `node` from PATH.
+# No action opens a popup: a popup change would make the herdr client drop copy mode.
+
+[[actions]]
+id = "mark"
+title = "Mark selection"
+description = "Queue the current copy-mode selection for this tab and show a short toast."
+contexts = ["pane"]
+command = ["./src/cli.ts", "mark"]
+
+[[actions]]
+id = "insert"
+title = "Insert marked selections"
+description = "Paste all queued selections of this tab into the focused pane without pressing Enter."
+contexts = ["pane"]
+command = ["./src/cli.ts", "insert"]
+
+[[actions]]
+id = "undo"
+title = "Remove last marked selection"
+description = "Drop the most recently queued selection of this tab."
+contexts = ["pane"]
+command = ["./src/cli.ts", "undo"]
+
+[[actions]]
+id = "clear"
+title = "Clear marked selections"
+description = "Drop all queued selections of this tab."
+contexts = ["pane"]
+command = ["./src/cli.ts", "clear"]
