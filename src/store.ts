@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { appendFileSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -15,19 +16,28 @@ const LOCK_TIMEOUT_MS = 3000;
 const LOCK_STALE_MS = 10_000;
 const LOCK_RETRY_MS = 20;
 
-/** Each herdr tab has its own queue; tab ids like "w1:t2" are encoded to stay filesystem safe. */
-export function queuePath(stateDir: string, tabId: string): string {
-  return join(stateDir, "queues", `${encodeURIComponent(tabId)}.jsonl`);
+/**
+ * Identifies a tab's queue. Named herdr sessions share the plugin state dir but number their tabs
+ * independently ("w1:t1" exists in each), so the session's socket path is part of the key.
+ */
+export function queueKey(socketPath: string, tabId: string): string {
+  const session = createHash("sha256").update(socketPath).digest("hex").slice(0, 8);
+  return `${session}:${tabId}`;
+}
+
+/** Queue keys contain ":", so they are encoded to stay filesystem safe. */
+export function queuePath(stateDir: string, key: string): string {
+  return join(stateDir, "queues", `${encodeURIComponent(key)}.jsonl`);
 }
 
 export function historyPath(stateDir: string): string {
   return join(stateDir, "history.jsonl");
 }
 
-export function readQueue(stateDir: string, tabId: string): Snippet[] {
+export function readQueue(stateDir: string, key: string): Snippet[] {
   let content: string;
   try {
-    content = readFileSync(queuePath(stateDir, tabId), "utf8");
+    content = readFileSync(queuePath(stateDir, key), "utf8");
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw error;
@@ -38,8 +48,8 @@ export function readQueue(stateDir: string, tabId: string): Snippet[] {
     .map((line) => JSON.parse(line) as Snippet);
 }
 
-function writeQueue(stateDir: string, tabId: string, snippets: Snippet[]): void {
-  const path = queuePath(stateDir, tabId);
+function writeQueue(stateDir: string, key: string, snippets: Snippet[]): void {
+  const path = queuePath(stateDir, key);
   if (snippets.length === 0) {
     rmSync(path, { force: true });
     return;
@@ -91,32 +101,32 @@ function isStale(lock: string): boolean {
 export type AddResult = { added: boolean; count: number };
 
 /** Appends a snippet unless it repeats the most recent one (e.g. a double keypress). */
-export function addSnippet(stateDir: string, tabId: string, snippet: Snippet): AddResult {
+export function addSnippet(stateDir: string, key: string, snippet: Snippet): AddResult {
   return withLock(stateDir, () => {
-    const queue = readQueue(stateDir, tabId);
+    const queue = readQueue(stateDir, key);
     if (queue.at(-1)?.text === snippet.text) return { added: false, count: queue.length };
     queue.push(snippet);
-    writeQueue(stateDir, tabId, queue);
+    writeQueue(stateDir, key, queue);
     return { added: true, count: queue.length };
   });
 }
 
 export type RemoveResult = { removed: Snippet | undefined; count: number };
 
-export function removeLastSnippet(stateDir: string, tabId: string): RemoveResult {
+export function removeLastSnippet(stateDir: string, key: string): RemoveResult {
   return withLock(stateDir, () => {
-    const queue = readQueue(stateDir, tabId);
+    const queue = readQueue(stateDir, key);
     const removed = queue.pop();
-    if (removed) writeQueue(stateDir, tabId, queue);
+    if (removed) writeQueue(stateDir, key, queue);
     return { removed, count: queue.length };
   });
 }
 
 /** Drops the whole queue and returns how many snippets it held. */
-export function clearQueue(stateDir: string, tabId: string): number {
+export function clearQueue(stateDir: string, key: string): number {
   return withLock(stateDir, () => {
-    const count = readQueue(stateDir, tabId).length;
-    writeQueue(stateDir, tabId, []);
+    const count = readQueue(stateDir, key).length;
+    writeQueue(stateDir, key, []);
     return count;
   });
 }
@@ -125,12 +135,12 @@ export function clearQueue(stateDir: string, tabId: string): number {
  * Moves the given snippets from the queue into the history after they were delivered.
  * Snippets marked while the delivery was in flight stay queued.
  */
-export function archiveSnippets(stateDir: string, tabId: string, delivered: Snippet[], targetPaneId: string): void {
+export function archiveSnippets(stateDir: string, key: string, delivered: Snippet[], targetPaneId: string): void {
   const deliveredIds = new Set(delivered.map((snippet) => snippet.id));
   withLock(stateDir, () => {
-    const remaining = readQueue(stateDir, tabId).filter((snippet) => !deliveredIds.has(snippet.id));
-    writeQueue(stateDir, tabId, remaining);
-    const entry = { insertedAt: new Date().toISOString(), tabId, targetPaneId, snippets: delivered };
+    const remaining = readQueue(stateDir, key).filter((snippet) => !deliveredIds.has(snippet.id));
+    writeQueue(stateDir, key, remaining);
+    const entry = { insertedAt: new Date().toISOString(), queue: key, targetPaneId, snippets: delivered };
     appendFileSync(historyPath(stateDir), `${JSON.stringify(entry)}\n`, { mode: 0o600 });
   });
 }

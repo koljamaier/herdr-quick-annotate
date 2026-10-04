@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { deliver } from "./delivery.ts";
 import { formatSnippets, preview, sanitize } from "./format.ts";
 import { notify } from "./herdr.ts";
-import { addSnippet, archiveSnippets, clearQueue, readQueue, removeLastSnippet } from "./store.ts";
+import { addSnippet, archiveSnippets, clearQueue, queueKey, readQueue, removeLastSnippet } from "./store.ts";
 
 /** The subset of HERDR_PLUGIN_CONTEXT_JSON this plugin reads. */
 type InvocationContext = {
@@ -32,13 +32,13 @@ function annotations(count: number): string {
   return count === 1 ? "1 annotation" : `${count} annotations`;
 }
 
-async function mark(context: InvocationContext, stateDir: string, tabId: string): Promise<void> {
+async function mark(context: InvocationContext, stateDir: string, queue: string): Promise<void> {
   const text = sanitize(context.selected_text ?? "");
   if (text === "") {
     await notify("Nothing selected", "Select text in copy mode, then press prefix+a");
     return;
   }
-  const { added, count } = addSnippet(stateDir, tabId, {
+  const { added, count } = addSnippet(stateDir, queue, {
     id: randomUUID(),
     text,
     capturedAt: new Date().toISOString(),
@@ -54,8 +54,8 @@ async function mark(context: InvocationContext, stateDir: string, tabId: string)
   }
 }
 
-async function insert(context: InvocationContext, stateDir: string, tabId: string): Promise<void> {
-  const snippets = readQueue(stateDir, tabId);
+async function insert(context: InvocationContext, stateDir: string, queue: string): Promise<void> {
+  const snippets = readQueue(stateDir, queue);
   if (snippets.length === 0) {
     await notify("No annotations queued", "Select text in copy mode, then press prefix+a");
     return;
@@ -65,12 +65,12 @@ async function insert(context: InvocationContext, stateDir: string, tabId: strin
     await notify("Not inserted", "The agent is waiting for an approval or answer");
     return;
   }
-  archiveSnippets(stateDir, tabId, snippets, paneId);
+  archiveSnippets(stateDir, queue, snippets, paneId);
   await notify(`${annotations(snippets.length)} inserted`);
 }
 
-async function undo(stateDir: string, tabId: string): Promise<void> {
-  const { removed, count } = removeLastSnippet(stateDir, tabId);
+async function undo(stateDir: string, queue: string): Promise<void> {
+  const { removed, count } = removeLastSnippet(stateDir, queue);
   if (!removed) {
     await notify("No annotations queued");
     return;
@@ -78,25 +78,26 @@ async function undo(stateDir: string, tabId: string): Promise<void> {
   await notify(`Removed #${count + 1} (${count} left)`, preview(removed.text));
 }
 
-async function clear(stateDir: string, tabId: string): Promise<void> {
-  const count = clearQueue(stateDir, tabId);
+async function clear(stateDir: string, queue: string): Promise<void> {
+  const count = clearQueue(stateDir, queue);
   await notify(count === 0 ? "No annotations queued" : `${annotations(count)} discarded`);
 }
 
 async function main(command: string | undefined): Promise<void> {
   const context = invocationContext();
   const stateDir = required(process.env.HERDR_PLUGIN_STATE_DIR, "HERDR_PLUGIN_STATE_DIR");
-  const tabId = required(context.tab_id ?? process.env.HERDR_TAB_ID, "tab id");
+  const socketPath = required(process.env.HERDR_SOCKET_PATH, "HERDR_SOCKET_PATH");
+  const queue = queueKey(socketPath, required(context.tab_id ?? process.env.HERDR_TAB_ID, "tab id"));
 
   switch (command) {
     case "mark":
-      return mark(context, stateDir, tabId);
+      return mark(context, stateDir, queue);
     case "insert":
-      return insert(context, stateDir, tabId);
+      return insert(context, stateDir, queue);
     case "undo":
-      return undo(stateDir, tabId);
+      return undo(stateDir, queue);
     case "clear":
-      return clear(stateDir, tabId);
+      return clear(stateDir, queue);
     default:
       throw new Error(`unknown command: ${command ?? "(none)"}; expected mark | insert | undo | clear`);
   }

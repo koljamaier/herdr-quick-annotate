@@ -140,11 +140,12 @@ Claude Code and the placeholder appears, the plugin does that second paste autom
 
 ### One queue per tab
 
-Each Herdr tab has its own queue. You can mark in any pane of a tab, and `insert` pastes that tab's
-queue into the focused pane. Queues are files, so they survive a Herdr restart:
+Each Herdr tab has its own queue, also across named sessions (`herdr --session`). You can mark in
+any pane of a tab, and `insert` pastes that tab's queue into the focused pane. Queues are files, so
+they survive a Herdr restart:
 
-- `~/.local/state/herdr/plugins/quick-annotate/queues/<tab-id>.jsonl`: the pending snippets, with
-  the pane, working directory, workspace and tab they came from
+- `~/.local/state/herdr/plugins/quick-annotate/queues/<session-hash>:<tab-id>.jsonl` (URL-encoded):
+  the pending snippets, with the pane, working directory, workspace and tab they came from
 - `~/.local/state/herdr/plugins/quick-annotate/history.jsonl`: every inserted batch
 
 ## Limitations

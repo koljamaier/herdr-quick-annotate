@@ -8,6 +8,7 @@ import {
   archiveSnippets,
   clearQueue,
   historyPath,
+  queueKey,
   queuePath,
   readQueue,
   removeLastSnippet,
@@ -24,6 +25,14 @@ beforeEach(() => {
 function snippet(text: string): Snippet {
   return { id: `id-${text}`, text, capturedAt: "2026-10-04T00:00:00.000Z" };
 }
+
+test("the same tab id in different herdr sessions gets different queues", () => {
+  const defaultSession = queueKey("/home/user/.config/herdr/herdr.sock", "w1:t1");
+  const namedSession = queueKey("/home/user/.config/herdr/sessions/demo/herdr.sock", "w1:t1");
+  assert.notEqual(defaultSession, namedSession);
+  assert.equal(defaultSession, queueKey("/home/user/.config/herdr/herdr.sock", "w1:t1"));
+  assert.match(defaultSession, /^[0-9a-f]{8}:w1:t1$/);
+});
 
 test("each tab has its own queue", () => {
   addSnippet(stateDir, "w1:t1", snippet("one"));
