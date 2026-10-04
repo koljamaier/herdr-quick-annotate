@@ -15,6 +15,14 @@ test("sanitize normalizes line endings and trims copy-mode padding", () => {
   assert.equal(sanitize("\n\nfirst   \r\nsecond\t \rthird\n\n"), "first\nsecond\nthird");
 });
 
+test("sanitize removes shared indentation but keeps relative indentation", () => {
+  assert.equal(
+    sanitize("Step 2: title\n  Set a limit.\n    nested\n\n  More."),
+    "Step 2: title\nSet a limit.\n  nested\n\nMore.",
+  );
+  assert.equal(sanitize("  if (x) {\n    run();\n  }"), "if (x) {\n  run();\n}");
+});
+
 test("preview collapses whitespace and truncates", () => {
   assert.equal(preview("one\n  two"), "one two");
   assert.equal(preview("abcdefghij", 5), "abcd…");

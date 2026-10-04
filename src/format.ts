@@ -1,17 +1,34 @@
 import type { Snippet } from "./store.ts";
 
 /**
- * Drops terminal control characters (ESC could end the bracketed paste early) and the
- * trailing padding copy mode adds to selected lines, plus blank lines around the selection.
+ * Drops terminal control characters (ESC could end the bracketed paste early), the trailing
+ * padding copy mode adds to selected lines, blank lines around the selection, and the
+ * indentation all lines share (e.g. the gutter Claude Code puts in front of every reply line).
  */
 export function sanitize(text: string): string {
-  return text
+  const lines = text
     .replace(/\r\n?/g, "\n")
     .replace(/[\x00-\x08\x0b-\x1f\x7f]/g, "")
     .split("\n")
     .map((line) => line.trimEnd())
     .join("\n")
-    .replace(/^\n+|\n+$/g, "");
+    .replace(/^\n+|\n+$/g, "")
+    .split("\n");
+  return dedent(lines).join("\n");
+}
+
+/**
+ * A selection usually starts mid-line, after the indentation, so the first line only gives up as
+ * much leading whitespace as it has; relative indentation (e.g. in code) is kept.
+ */
+function dedent(lines: string[]): string[] {
+  const indents = lines
+    .slice(1)
+    .filter((line) => line !== "")
+    .map((line) => line.length - line.trimStart().length);
+  if (indents.length === 0) return lines;
+  const common = Math.min(...indents);
+  return lines.map((line) => line.slice(Math.min(common, line.length - line.trimStart().length)));
 }
 
 /** Single-line excerpt for the toast body. */
