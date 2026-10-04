@@ -1,26 +1,26 @@
 # herdr-quick-annotate
 
-Review agent output by voice inside [Herdr](https://github.com/herdrdev/herdr). In copy mode, mark
-one passage after another without losing your place. Then paste all of them into the agent's
-prompt as labeled quotes and speak your comments.
+Mark passages of agent output in [Herdr](https://github.com/herdrdev/herdr)'s copy mode without
+losing your place, then paste all of them into the agent's prompt as labeled quotes and comment on
+them there.
 
 ## Why
 
 Shoutout to [plannotator/herdr-annotate](https://github.com/plannotator/herdr-annotate), which
-inspired this plugin. I needed a variant for reviewing by voice. There, every annotation opens an
-editor popup. That ends Herdr's copy mode, so you lose your place, and the comment goes into the
-popup instead of the agent's prompt, where my dictation works.
-
-A system-wide dictation tool (Whisper-based or similar) would type into the popup as well. If
-that's part of your setup, the original dialog may suit you fine. It isn't part of mine, so I
-wanted the comments in the prompt.
+inspired this plugin. There, every annotation opens an editor popup, and that ends Herdr's copy
+mode: cursor, scroll position and selection are gone, and you scroll back up to find the next
+passage. When I go through a long agent reply, I want the cursor to stay where it is.
 
 Here, nothing opens:
 
 - `prefix+a` queues the selection and shows a short toast. Copy mode stays exactly where it was, so
   you can select the next passage right away.
 - `prefix+m` pastes all queued passages into the agent's prompt as labeled quotes, without pressing
-  Enter. Then you say "A1: … A2: …" and send.
+  Enter. Then you write or dictate "A1: … A2: …" and send.
+
+Commenting in the prompt also fits voice input, which in my setup only works there. With a
+system-wide dictation tool (Whisper-based or similar) you could dictate into the original's dialog
+just as well.
 
 ## Requirements
 
@@ -111,7 +111,7 @@ A review round:
 2. Select it with `v` and a motion, then press `Ctrl+B A`.
 3. `Esc` clears the highlight and keeps copy mode. Move to the next passage and repeat.
 4. `q` leaves copy mode. `Ctrl+B M` pastes everything into the prompt.
-5. Dictate "A1: … A2: …" and press Enter.
+5. Write or dictate "A1: … A2: …" and press Enter.
 
 ### What gets pasted
 
@@ -127,7 +127,7 @@ Comments on the following passages:
 
 ```
 
-The paste ends with an empty line, so you can start talking right away. Control characters are
+The paste ends with an empty line, so you can start commenting right away. Control characters are
 stripped, and trailing whitespace is trimmed. The format lives in `src/format.ts`.
 
 ### Claude Code
