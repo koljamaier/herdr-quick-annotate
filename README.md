@@ -102,7 +102,7 @@ herdr server reload-config
 
 | Key | Action |
 |---|---|
-| `Ctrl+B A` | queue the copy-mode selection for this tab · the toast shows the count and a preview · copy mode stays |
+| `Ctrl+B A` | queue the copy-mode selection for this tab · a short toast shows its number · copy mode stays |
 | `Ctrl+B M` | paste the tab's queue into the focused pane without Enter, then archive it |
 | unbound | `quick-annotate.undo`: drop the last queued selection |
 | unbound | `quick-annotate.clear`: drop the whole queue of this tab |
@@ -161,8 +161,8 @@ they survive a Herdr restart:
   back to the clipboard, so stale clipboard content can't end up in the queue. A Visual-mode
   selection inside Neovim or another terminal app isn't Herdr's selection, so the plugin can't see
   it. Select with Herdr's copy mode instead.
-- **Toast limits.** Herdr shows each toast for 5 seconds, at most one per second. A mark is still
-  queued when its toast is rate-limited.
+- **Toast limits.** Herdr shows each toast for 5 seconds, at most one per second, in a corner (this
+  plugin uses the top right). A mark is still queued when its toast is rate-limited.
 - **Untested setups.** Remote sessions (SSH, `herdr --remote`) haven't been tested.
 
 ## Development

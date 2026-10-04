@@ -42,10 +42,13 @@ export function call(method: string, params: Json): Promise<Json> {
   });
 }
 
-/** Best-effort toast; a failed notification must never fail the action itself. */
+/**
+ * Best-effort toast; a failed notification must never fail the action itself. Shown top right:
+ * herdr's default bottom corner sits right on top of the copy-mode key hints.
+ */
 export async function notify(title: string, body?: string): Promise<void> {
   try {
-    await call("notification.show", { title, body: body ?? null, sound: "none" });
+    await call("notification.show", { title, body: body ?? null, position: "top-right", sound: "none" });
   } catch (error) {
     console.error(`notification failed: ${(error as Error).message}`);
   }

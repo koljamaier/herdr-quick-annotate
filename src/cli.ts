@@ -48,9 +48,9 @@ async function mark(context: InvocationContext, stateDir: string, queue: string)
     tabLabel: context.tab_label ?? undefined,
   });
   if (added) {
-    await notify(`Annotation #${count} queued`, preview(text));
+    await notify(`Marked #${count}`);
   } else {
-    await notify("Already queued", `#${count}: ${preview(text)}`);
+    await notify(`Already marked #${count}`);
   }
 }
 
